@@ -1,0 +1,18 @@
+app/
+├── (auth)/                 → páginas de login y registro
+├── (dashboard)/            → layout protegido con sidebar
+│   ├── inventory/          → gestión de stock
+│   ├── repairs/            → órdenes de reparación
+│   ├── customers/          → clientes
+│   ├── reports/            → reportes e ingresos
+│   └── layout.tsx
+prisma/
+├── schema.prisma
+lib/
+├── prisma.ts               → cliente de Prisma
+├── auth.ts
+components/
+├── ui/                     → componentes de shadcn
+├── tables/
+├── forms/
+types/

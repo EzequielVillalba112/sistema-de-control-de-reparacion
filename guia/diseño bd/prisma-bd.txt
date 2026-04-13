@@ -1,0 +1,180 @@
+Prisma Schema completo
+
+prismagenerator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String?   // para credenciales propias (opcional con OAuth)
+  role          Role      @default(TECHNICIAN)
+  image         String?
+  repairsAsTech Repair[]  // reparaciones que realiza este técnico
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  name        String
+  phone       String    @unique
+  email       String?
+  address     String?
+  repairs     Repair[]
+  createdAt   DateTime  @default(now())
+}
+
+model PhoneModel {
+  id          String         @id @default(cuid())
+  brand       String         // Ej: Apple, Samsung, Xiaomi
+  model       String         // Ej: iPhone 13, Galaxy A54
+  storage     String?        // Ej: 128GB, 256GB
+  color       String?
+  repairs     Repair[]
+  inventory   InventoryItem[]
+}
+
+model InventoryItem {
+  id              String    @id @default(cuid())
+  name            String    // Ej: "Pantalla OLED iPhone 13", "Batería Samsung A54"
+  sku             String    @unique
+  category        Category
+  quantity        Int       @default(0)
+  minStock        Int       @default(5)   // alerta cuando baja de este número
+  purchasePrice   Decimal   @db.Decimal(10, 2)  // precio de compra
+  salePrice       Decimal   @db.Decimal(10, 2)  // precio de venta / repuesto
+  phoneModelId    String?
+  phoneModel      PhoneModel? @relation(fields: [phoneModelId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([sku])
+}
+
+model Repair {
+  id               String        @id @default(cuid())
+  ticketNumber     String        @unique @default("REP-####")  // número automático de ticket
+  customerId       String
+  customer         Customer      @relation(fields: [customerId], references: [id])
+  phoneModelId     String
+  phoneModel       PhoneModel    @relation(fields: [phoneModelId], references: [id])
+  imei             String?
+  password         String?       // contraseña del celular
+  problem          String        // falla reportada por el cliente
+  diagnosis        String?       // diagnóstico del técnico
+  status           RepairStatus  @default(RECEIVED)
+  technicianId     String?
+  technician       User?         @relation(fields: [technicianId], references: [id])
+  partsUsed        RepairPart[]  // piezas utilizadas
+  totalCost        Decimal       @db.Decimal(10, 2) @default(0)
+  advancePayment   Decimal       @db.Decimal(10, 2) @default(0)
+  receivedAt       DateTime      @default(now())
+  completedAt      DateTime?
+  deliveredAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model RepairPart {
+  id              String        @id @default(cuid())
+  repairId        String
+  repair          Repair        @relation(fields: [repairId], references: [id])
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  quantity        Int
+  price           Decimal       @db.Decimal(10, 2)
+}
+
+enum Role {
+  ADMIN
+  TECHNICIAN
+  VIEWER
+}
+
+enum Category {
+  SCREEN
+  BATTERY
+  CAMERA
+  CHARGING_PORT
+  OTHER
+  PHONE
+  ACCESSORY
+}
+
+enum RepairStatus {
+  RECEIVED      // Recibido
+  DIAGNOSIS     // En diagnóstico
+  WAITING_PARTS // Esperando repuestos
+  IN_REPAIR     // En reparación
+  READY         // Listo para entregar
+  DELIVERED     // Entregado
+  CANCELLED     // Cancelado
+}
+Explicación detallada de cada modelo y campo (para el Word)
+User → Usuarios del sistema (técnicos y administradores)
+
+id: Identificador único
+name: Nombre completo
+email: Correo (único)
+password: Contraseña hasheada (opcional si usás Google, etc.)
+role: Rol del usuario (ADMIN, TECHNICIAN, VIEWER)
+image: Foto de perfil
+repairsAsTech: Relación con las reparaciones que realiza
+
+Customer → Clientes que traen celulares
+
+id: Identificador único
+name: Nombre del cliente
+phone: Teléfono (único) → muy importante para buscar rápido
+email: Correo opcional
+address: Dirección (opcional)
+repairs: Todas las reparaciones de este cliente
+
+PhoneModel → Modelos de celulares
+
+brand, model, storage, color: Detalles del teléfono
+Se relaciona con inventario y reparaciones
+
+InventoryItem → Repuestos y accesorios en stock
+
+name: Nombre descriptivo del repuesto
+sku: Código único de producto
+category: Categoría (pantalla, batería, etc.)
+quantity: Cantidad actual en stock
+minStock: Stock mínimo para alertas
+purchasePrice / salePrice: Precios de compra y venta
+phoneModelId: Si el repuesto pertenece a un modelo específico
+
+Repair → Orden de reparación (el corazón del sistema)
+
+ticketNumber: Número de ticket automático (ej: REP-0001)
+customer, phoneModel: Relaciones
+problem: Falla reportada
+diagnosis: Diagnóstico del técnico
+status: Estado actual de la reparación
+technician: Técnico asignado
+totalCost: Costo total
+advancePayment: Adelanto pagado
+Fechas de recepción, completado y entrega
+
+RepairPart → Piezas usadas en una reparación
+
+Permite descontar automáticamente del inventario
+Registra cantidad y precio de cada pieza usada
+
+
+Cómo continuar el proyecto (resumen rápido):
+
+Crear el proyecto con npx create-next-app
+Instalar Prisma y dependencias
+Configurar .env con DATABASE_URL
+Ejecutar npx prisma db push o prisma migrate dev
+Implementar autenticación
+Crear CRUD de inventario y reparaciones
