@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+enum Role{
+  ADMIN
+  TECHNICIAN
+  VIEWER
+}
+
+enum Category{
+  PLACAS
+  RESPUESTOS
+}
+
+enum RepairStatus{
+  RESIVIDO
+  DIAGNOSTICO
+  ESPERANDO_PARTES
+  EN_REPARACION
+  COMPLETO
+  CANCELADO
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String?   
+  role          Role      @default(TECHNICIAN)
+  image         String?
+  repairsAsTech Repair[]  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  name        String
+  phone       String    @unique
+  email       String?
+  address     String?
+  repairs     Repair[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PhoneModel {
+  id          String         @id @default(cuid())
+  brand       String
+  model       String
+  storage     String?
+  color       String?
+  repairs     Repair[]
+  inventory   InventoryItem[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([brand, model, storage, color]) // evita duplicados de modelos
+}
+
+model InventoryItem {
+  id              String    @id @default(cuid())
+  name            String
+  sku             String    @unique
+  category        Category
+  quantity        Int       @default(0)
+  minStock        Int       @default(5)
+  purchasePrice   Decimal   @db.Decimal(10, 2)
+  salePrice       Decimal   @db.Decimal(10, 2)
+  phoneModelId    String?
+  phoneModel      PhoneModel? @relation(fields: [phoneModelId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([sku])
+  @@index([category])
+}
+
+model Repair {
+  id               String        @id @default(cuid())
+  ticketNumber     String        @unique @default("REP-####") 
+  customerId       String
+  customer         Customer      @relation(fields: [customerId], references: [id])
+  phoneModelId     String
+  phoneModel       PhoneModel    @relation(fields: [phoneModelId], references: [id])
+  imei             String?
+  password         String?
+  problem          String        // falla reportada por el cliente
+  diagnosis        String?
+  status           RepairStatus  @default(RESIVIDO)
+  technicianId     String?
+  technician       User?         @relation(fields: [technicianId], references: [id])
+  partsUsed        RepairPart[]
+  totalCost        Decimal       @db.Decimal(10, 2) @default(0)
+  advancePayment   Decimal       @db.Decimal(10, 2) @default(0)
+  receivedAt       DateTime      @default(now())
+  completedAt      DateTime?
+  deliveredAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([status])
+  @@index([receivedAt])
+}
+
+model RepairPart {
+  id              String        @id @default(cuid())
+  repairId        String
+  repair          Repair        @relation(fields: [repairId], references: [id], onDelete: Cascade)
+  quantity        Int
+  price           Decimal       @db.Decimal(10, 2)
+}
