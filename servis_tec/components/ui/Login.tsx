@@ -59,20 +59,20 @@ const LoginForm = () => {
       //   redirect: false,
       // });
 
-      if (res?.error) {
-        if (res.error === "CredentialsSignin") {
-          setErrorsLogin({
-            message: "Correo o contraseña incorrectos",
-            status: true,
-          });
-        } else {
-          setErrors({
-            email: "Error al iniciar sesión",
-            password: "Error al iniciar sesión",
-          });
-        }
-        return;
-      }
+      // if (res?.error) {
+      //   if (res.error === "CredentialsSignin") {
+      //     setErrorsLogin({
+      //       message: "Correo o contraseña incorrectos",
+      //       status: true,
+      //     });
+      //   } else {
+      //     setErrors({
+      //       email: "Error al iniciar sesión",
+      //       password: "Error al iniciar sesión",
+      //     });
+      //   }
+      //   return;
+      // }
 
       toast.success("¡Inicio de sesión exitoso!", {
         description: "Bienvenido de vuelta",

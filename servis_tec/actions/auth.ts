@@ -85,7 +85,11 @@ export async function loginUser(
     throw new Error("Usuario no encontrado");
   }
 
-  const validPassword = await compare(
+  if (!user.password) {
+    throw new Error("El usuario no tiene contraseña");
+  }
+
+  const validPassword = await bcrypt.compare(
     password,
     user.password
   );
@@ -96,8 +100,6 @@ export async function loginUser(
 
   return user;
 }
-
-
 export async function logout() {
- 
+
 }
