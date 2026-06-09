@@ -15,12 +15,11 @@ const page = async () => {
   return (
     <div>
       <h1>Dashboard</h1>
-      <button
-        className="btn btn-primary mt-4 text-white cursor-pointer p-2 bg-red-500 hover:bg-red-600"
-        onClick={logoutSession}
-      >
-        Logout
-      </button>
+      <form action={logoutSession}>
+        <button className="btn btn-primary mt-4 text-white cursor-pointer p-2 bg-red-500 hover:bg-red-600">
+          Logout
+        </button>
+      </form>
     </div>
   );
 };
