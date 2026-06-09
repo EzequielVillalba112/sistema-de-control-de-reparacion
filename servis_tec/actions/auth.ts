@@ -3,7 +3,6 @@ import { RegisterSchema } from '@/lib/zod'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import type { z } from 'zod'
-import { signOut } from '@/lib/auth'
 
 type RegisterResponse =
   | { success: true }
@@ -43,7 +42,6 @@ export async function registerAction(
 
     const rawName = parsed.data.name.trim();
 
-    // Función simple y efectiva
     const formatName = (str: string): string => {
       return str
         .toLowerCase()                    // todo a minúsculas primero
@@ -75,6 +73,31 @@ export async function registerAction(
 }
 
 
+export async function loginUser(
+  email: string,
+  password: string
+) {
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    throw new Error("Usuario no encontrado");
+  }
+
+  const validPassword = await compare(
+    password,
+    user.password
+  );
+
+  if (!validPassword) {
+    throw new Error("Contraseña incorrecta");
+  }
+
+  return user;
+}
+
+
 export async function logout() {
-  await signOut({ redirectTo: "/login" });
+ 
 }

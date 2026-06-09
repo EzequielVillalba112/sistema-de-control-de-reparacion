@@ -2,7 +2,6 @@
 import { useState } from "react";
 import FormAuth from "../forms/FormsAuth";
 import { LoginSchema } from "@/lib/zod";
-import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
 const LoginForm = () => {
@@ -54,11 +53,11 @@ const LoginForm = () => {
     console.log(form);
 
     try {
-      const res = await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        redirect: false,
-      });
+      // const res = await signIn("credentials", {
+      //   email: form.email,
+      //   password: form.password,
+      //   redirect: false,
+      // });
 
       if (res?.error) {
         if (res.error === "CredentialsSignin") {
