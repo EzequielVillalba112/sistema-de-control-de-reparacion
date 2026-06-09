@@ -3,6 +3,7 @@ import { useState } from "react";
 import FormAuth from "../forms/FormsAuth";
 import { LoginSchema } from "@/lib/zod";
 import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 
 const LoginForm = () => {
   const [form, setForm] = useState({
@@ -51,7 +52,7 @@ const LoginForm = () => {
     setErrors({});
     setIsLoading(true);
     console.log(form);
-    
+
     try {
       const res = await signIn("credentials", {
         email: form.email,
@@ -74,7 +75,17 @@ const LoginForm = () => {
         return;
       }
 
-      //   window.location.href = "/dashboard";
+      toast.success("¡Inicio de sesión exitoso!", {
+        description: "Bienvenido de vuelta",
+        icon: "🎉",
+        duration: 7000,
+        position: "top-center",
+        action: {
+          label: "Entrar ahora",
+          onClick: () => (window.location.href = "/dashboard"),
+        },
+      });
+
     } catch (error) {
       console.error("Error inesperado en login:", error);
       setErrors({
