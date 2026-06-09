@@ -3,8 +3,11 @@ import { useState } from "react";
 import FormAuth from "../forms/FormsAuth";
 import { LoginSchema } from "@/lib/zod";
 import { toast } from "sonner";
+import { loginUser } from "@/actions/auth";
+import { useRouter } from "next/navigation";
 
 const LoginForm = () => {
+  const router = useRouter();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -53,38 +56,26 @@ const LoginForm = () => {
     console.log(form);
 
     try {
-      // const res = await signIn("credentials", {
-      //   email: form.email,
-      //   password: form.password,
-      //   redirect: false,
-      // });
+      const res = await loginUser(form.email, form.password);
 
-      // if (res?.error) {
-      //   if (res.error === "CredentialsSignin") {
-      //     setErrorsLogin({
-      //       message: "Correo o contraseña incorrectos",
-      //       status: true,
-      //     });
-      //   } else {
-      //     setErrors({
-      //       email: "Error al iniciar sesión",
-      //       password: "Error al iniciar sesión",
-      //     });
-      //   }
-      //   return;
-      // }
+      if (res?.success === false) {
+        if (res.error) {
+          setErrorsLogin({
+            message: res.error,
+            status: true,
+          });
+        }
+        return;
+      }
 
       toast.success("¡Inicio de sesión exitoso!", {
         description: "Bienvenido de vuelta",
         icon: "🎉",
-        duration: 7000,
-        position: "top-center",
-        action: {
-          label: "Entrar ahora",
-          onClick: () => (window.location.href = "/dashboard"),
-        },
+        duration: 6000,
+        position: "top-right",
       });
 
+      router.push("/dashboard");
     } catch (error) {
       console.error("Error inesperado en login:", error);
       setErrors({

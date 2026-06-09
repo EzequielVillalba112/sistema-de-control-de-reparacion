@@ -4,8 +4,10 @@ import FormAuth from "../forms/FormsAuth";
 import { useState } from "react";
 import { registerAction } from "@/actions/auth";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const RegisterForm = () => {
+  const router = useRouter();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -52,27 +54,28 @@ const RegisterForm = () => {
     }
     setErrors({});
 
-    const res = await registerAction(form);
+    try {
+      const res = await registerAction(form);
 
-    if (res?.success === false) {
-      setErrorsRegister({ message: res.error as string, status: true });
-      return;
+      if (res?.success === false) {
+        setErrorsRegister({ message: res.error as string, status: true });
+        return;
+      }
+
+      toast.success("¡Registro completado!", {
+        description: "Tu cuenta está lista. ¡Iniciar Sesión!",
+        icon: "🎉",
+        duration: 6000,
+        position: "top-right",
+      });
+
+      setForm({ name: "", email: "", password: "" });
+      setErrorsRegister({ message: "", status: false });
+      setErrors({});
+
+    } catch (error) {
+      console.error("Error inesperado en login:", error);
     }
-
-    toast.success("¡Registro completado!", {
-      description: "Tu cuenta está lista. ¡Iniciar Sesión!",
-      icon: "🎉",
-      duration: 7000,
-      position: "top-center",
-      action: {
-        label: "Entrar ahora",
-        onClick: () => (window.location.href = "/dashboard"),
-      },
-      
-    });
-
-    setErrorsRegister({ message: "", status: false });
-    setErrors({});
   };
 
   return (

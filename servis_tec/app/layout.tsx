@@ -30,7 +30,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        {children}
         <Toaster
           position="top-right" // o bottom-right, top-center, etc.
           richColors // colores más bonitos
@@ -38,6 +37,7 @@ export default function RootLayout({
           closeButton // muestra X para cerrar
           theme="dark" // si quieres forzar dark mode
         />
+        {children}
       </body>
     </html>
   );

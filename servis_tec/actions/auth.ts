@@ -3,6 +3,9 @@ import { RegisterSchema } from '@/lib/zod'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import type { z } from 'zod'
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
+
 
 type RegisterResponse =
   | { success: true }
@@ -72,7 +75,6 @@ export async function registerAction(
   }
 }
 
-
 export async function loginUser(
   email: string,
   password: string
@@ -82,11 +84,17 @@ export async function loginUser(
   });
 
   if (!user) {
-    throw new Error("Usuario no encontrado");
+    return {
+      success: false,
+      error: "El usuario no existe",
+    };
   }
 
   if (!user.password) {
-    throw new Error("El usuario no tiene contraseña");
+    return {
+      success: false,
+      error: "El usuario no tiene una contraseña",
+    };
   }
 
   const validPassword = await bcrypt.compare(
@@ -95,11 +103,56 @@ export async function loginUser(
   );
 
   if (!validPassword) {
-    throw new Error("Contraseña incorrecta");
+    return {
+      success: false,
+      error: "La contraseña es incorrecta",
+    };
   }
 
-  return user;
-}
-export async function logout() {
+  //Creacion del token
+  const token = jwt.sign(
+    {
+      userId: user.id,
+      email: user.email,
+    },
+    process.env.JWT_SECRET!,
+    {
+      expiresIn: "1d",
+    }
+  );
 
+  (await cookies()).set("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+
+  return { success: true };
+}
+
+//Obtener el usuario actual desde el token
+export async function getCurrentUser() {
+  const token = (await cookies())
+    .get("token")
+    ?.value;
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const payload = jwt.verify(
+      token,
+      process.env.JWT_SECRET!
+    );
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export async function logout() {
+  (await cookies()).delete("token");
 }
